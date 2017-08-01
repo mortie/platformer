@@ -17,9 +17,9 @@ function outlineSkewed(self, ctx, mx, my) {
 	var offsY = self.vy * my;
 
 	ctx.beginPath();
-	ctx.moveTo(-offsX, 0);
-	ctx.lineTo(-offsX + self.w, 0);
-	ctx.lineTo(self.w, self.h + offsY);
-	ctx.lineTo(0, self.h + offsY);
+	ctx.moveTo(-offsX, - offsY);
+	ctx.lineTo(-offsX + self.w, - offsY);
+	ctx.lineTo(self.w, self.h);
+	ctx.lineTo(0, self.h);
 	ctx.closePath();
 }

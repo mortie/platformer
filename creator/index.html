@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Level Creator</title>
+
+		<style>
+#topbar, #sidebar {
+	position: absolute;
+}
+
+#sidebar {
+	display: none;
+	right: 0px;
+}
+#sidebar.active {
+	display: inline-block;
+}
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<button id="run">Run</button>
+
+			<button id="spawn-platform">Platform</button>
+			<button id="spawn-wall">Wall</button>
+			<button id="spawn-victory">Victory</button>
+		</div>
+		<div id="sidebar">
+			<div id="sidebar-name"></div>
+			<div id="sidebar-props"></div>
+		</div>
+
+		<canvas id="can"></canvas>
+		<script src="../bundle.js"></script>
+		<script src="bundle.js"></script>
+	</body>
+</html>

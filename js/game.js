@@ -16,6 +16,17 @@
  *         function ontouch(ent): Called when touched by ent
  */
 
+(function() {
+
+window.game = {
+	init: init,
+	stop: stop,
+	createEnt: createEnt,
+	spawn: spawn,
+	setCamera: setCamera,
+	drawEnt: drawEnt,
+};
+
 var plats = [];
 var terrain = [];
 var mobs = [];
@@ -90,6 +101,15 @@ var spawnables = {
 	},
 };
 
+// Find canvas, ctx and level
+var can = document.getElementById("can");
+var ctx = can.getContext("2d");
+var level = document.getElementById("level");
+
+// Expose canvas and ctx
+game.can = can;
+game.ctx = ctx;
+
 // React to keyboard input
 var keys = {};
 window.onkeydown = key =>
@@ -106,6 +126,7 @@ window.onkeyup = key =>
 // Entity constructors
 #include "entities.js"
 
+// Run 'func' in the next game tick
 function nextGameTick(func) {
 	return window.requestAnimationFrame(func);
 	//return setTimeout(() => func(new Date().getTime()), 1000 / 30);
@@ -136,9 +157,18 @@ function updateCam(ent, instant, dt) {
 	camy += (ty - camy) * lerp * dt;
 }
 
-var can = document.getElementById("can");
-var ctx = can.getContext("2d");
-var level = document.getElementById("level");
+function setCamera(x, y) {
+	camx = x;
+	camy = y;
+}
+
+function drawEnt(ent, ctx) {
+	ctx.translate(
+		ent.x - camx,
+		ent.y - camy);
+	ent.draw && ent.draw(ctx);
+	ctx.resetTransform();
+}
 
 var ents = [ plats, terrain, mobs, player, interactive ];
 var timeout = 0;
@@ -168,11 +198,7 @@ function update(currTime) {
 			ent.x += ent.vx * dt;
 			ent.y += ent.vy * dt;
 
-			ctx.translate(
-				ent.x - camx,
-				ent.y - camy);
-			ent.draw && ent.draw(ctx);
-			ctx.resetTransform();
+			drawEnt(ent, ctx);
 		});
 
 		updateCam(player[0], false, dt);
@@ -182,7 +208,11 @@ function update(currTime) {
 		timeout = nextGameTick(update);
 }
 
-function spawn(s, obj) {
+function createEnt(name, obj) {
+	var s = spawnables[name];
+	if (!s)
+		throw new Error("Unknown entity: "+name);
+
 	var args = [];
 	s.args.forEach(arg => {
 		if (typeof arg === "string")
@@ -194,9 +224,15 @@ function spawn(s, obj) {
 	});
 
 	var ent = s.func.apply(null, args);
-	s.arr.push(ent);
+	return ent;
 }
 
+function spawn(name, obj) {
+	var s = spawnables[name];
+	s.arr.push(createEnt(name, obj));
+}
+
+var initStr = null;
 function init(lstr, nostart) {
 
 	// Set styles
@@ -206,7 +242,9 @@ function init(lstr, nostart) {
 		"padding: 0px;"+
 		"margin: 0px;"+
 		"overflow: hidden;";
-	level.style.display = "none";
+
+	if (level)
+		level.style.display = "none";
 
 	// Set initial values
 	camx = 0;
@@ -216,8 +254,19 @@ function init(lstr, nostart) {
 	can.width = window.innerWidth;
 	can.height = window.innerHeight;
 
+	// Find correct level description string
+	if (lstr == null) {
+		if (initStr == null && level)
+			lstr = initStr = level.innerText;
+		else if (initStr != null)
+			lstr = initStr;
+		else
+			lstr = initStr = "";
+	} else {
+		initStr = lstr;
+	}
+
 	// Spawn entities
-	lstr = lstr != null ? lstr : level.innerText;
 	lstr.split(";").forEach(s => {
 		s = s.trim();
 		if (s == "")
@@ -227,15 +276,12 @@ function init(lstr, nostart) {
 		s = s.replace(name, "");
 		var obj = eval("("+s+")");
 
-		var spawnable = spawnables[name];
-		if (!spawnable)
-			return console.error("Unknown entity: "+name);
-
-		spawn(spawnable, obj);
+		spawn(name, obj);
 	});
 
 	// Set camera to initial position
-	updateCam(player[0], true, 1);
+	if (!nostart)
+		updateCam(player[0], true, 1);
 
 	// Start
 	timeout = 0;
@@ -249,4 +295,8 @@ function stop() {
 	timeout = null;
 }
 
-init();
+function getSpawnable(name) {
+	return spawnables[name];
+}
+
+}());
