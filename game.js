@@ -205,56 +205,6 @@ function entPhysics(self, dt) {
 	}
 }
 
-// Run physics for entity.
-//function entPhysics(self, dt) {
-//
-//	// Are we colliding with platforms?
-//	var currentPlat = null;
-//	for (var i in plats) {
-//		if (entsCollide(self, plats[i])) {
-//			currentPlat = plats[i];
-//			break;
-//		}
-//	}
-//
-//	// Are we colliding with interactive elements?
-//	for (var i in interactive) {
-//		var ent = interactive[i];
-//		if (ent !== self && entsCollide(self, ent)) {
-//			ent.ontouch && ent.ontouch();
-//		}
-//	}
-//
-//	var fric = self.onGround ? 0.1 : 0.05;
-//	if (!self.onGround && currentPlat) {
-//		if (self.vy >= currentPlat.vy) {
-//			self.rvx = 0;
-//			self.rvy = 0;
-//			self.onGround = true;
-//		}
-//	} else if (!currentPlat) {
-//		self.onGround = false;
-//	}
-//
-//	if (self.updateRV)
-//		self.updateRV();
-//	if (!self.onGround)
-//		self.rvy += gravity;
-//
-//	self.vx = self.rvx;
-//	self.vy = self.rvy;
-//
-//	// Friction
-//	var xRatio = 1 / (1 + (dt * fric));
-//	self.rvx *= xRatio;
-//
-//	if (currentPlat && self.onGround) {
-//		self.vx += currentPlat.vx;
-//		self.vy += currentPlat.vy;
-//		self.y = currentPlat.y - self.h + 1;
-//	}
-//}
-
 // Distance between two points
 function dist(x1, y1, x2, y2) {
 	var lx = x2 - x1;
