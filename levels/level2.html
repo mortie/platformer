@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Level 1</title>
+	</head>
+	<body>
+		<pre id="level">
+player { x: 140, y: 150 };
+
+platform {
+	x: 100, y: 150, w: 100, h: 20,
+	type: "loop",
+	path: [
+		[ 0, 0, 100 ],
+		[ 300, 0, 100 ],
+		[ 300, 500, 40 ],
+		[ 0, 300, 100 ],
+	],
+};
+
+platform {
+	x: 900, y: 150, w: 100, h: 20,
+	path: [
+		[ 0, 0, 200 ],
+		[ -400, 500, 140 ],
+	],
+};
+
+platform {
+	x: 1150, y: 150, w: 100, h: 20,
+	type: "loop",
+	path: [
+		[ 0, 0, 100 ],
+		[ 400, 500, 140 ],
+		[ 400, 0, 100 ],
+	],
+};
+
+victory {
+	x: 1400, y: 120, w: 100, h: 20,
+	path: [
+		[ 0, 0, 60 ],
+		[ 0, -100, 60 ],
+	],
+};
+		</pre>
+
+		<canvas id="can"></canvas>
+		<script src="../game.js"></script>
+	</body>
+</html>
