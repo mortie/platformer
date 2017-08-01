@@ -98,7 +98,7 @@ function Player(x, y) {
 	var jumping = false;
 
 	self.draw = function(ctx) {
-		outline(self, ctx);
+		outlineSkewed(self, ctx, 2, 1);
 		ctx.fillStyle = "black";
 		ctx.strokeStyle = "grey";
 		ctx.fill();

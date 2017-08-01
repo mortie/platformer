@@ -1,5 +1,8 @@
-bundle.js: js/game.js js/entities.js
-	cpp -P js/game.js >bundle.js
+TARGET=bundle.js
+SOURCE=js/game.js
+
+$(TARGET): $(shell find js -name '*.js')
+	cpp -P $(SOURCE) >$(TARGET)
 
 clean:
-	rm -f bundle.js
+	rm -f $(TARGET) deps.d
