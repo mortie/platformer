@@ -9,15 +9,14 @@ function entsCollide(ent1, ent2) {
 // What side does ent1 collide with ent2 on?
 // left: 0, top: 1: right: 2: bottom: 3
 function entsCollideSide(ent1, ent2, dt) {
-	if (ent1.y + (ent1.h / 2) <= ent2.y + (ent1.vy + ent2.vy) * dt) {
+	if (ent1.y + ent1.h / 2 <= ent2.y + ent1.vy * dt)
 		return 1;
-	} else if (ent1.y >= ent2.y + ent2.h + (ent1.vy + ent2.vy) * dt) {
+	if (ent1.y + ent1.h / 2 >= ent2.y + ent2.h + ent1.vy * dt)
 		return 3;
-	} else if (ent1.x + ent1.w < ent2.x + (ent2.w / 2)) {
+	if (ent1.x + ent1.w / 2 <= ent2.x + ent2.w / 2)
 		return 0;
-	} else {
+	if (ent1.x + ent1.w / 2 >= ent2.x + ent2.w / 2)
 		return 2;
-	}
 }
 
 function entPhysics(self, dt) {
@@ -26,9 +25,7 @@ function entPhysics(self, dt) {
 		self.currentGround = null;
 
 	// Are we colliding with terrain?
-	var bouncedX = false;
-	var bouncedY = false;
-	var bounce = -0.3;
+	var sideCollissions = [];
 	for (var i in terrain) {
 		if (entsCollide(self, terrain[i])) {
 			var side = entsCollideSide(self, terrain[i], dt);
@@ -37,23 +34,14 @@ function entPhysics(self, dt) {
 			if (side === 1 && self.vy >= terrain[i].vy) {
 				self.currentGround = terrain[i];
 
-			// left
-			} else if (side === 0 && !bouncedX && self.rvx > 0) {
-				self.x += -self.rvx;
-				self.rvx *= bounce;
-				bouncedX = true;
-
-			// right
-			} else if (side === 2 && !bouncedX && self.rvx < 0) {
-				self.x += -self.rvx;
-				self.rvx *= bounce;
-				bouncedX = true;
-
 			// bottom
 			} else if (side === 3 && self.rvy < 0) {
-				self.y += -self.rvy;
-				self.rvy *= bounce;
-				bouncedY = true;
+				self.rvy = Math.abs(self.rvy);
+				self.y += self.rvy;
+			}
+
+			if (side === 0 || side === 2) {
+				sideCollissions.push(terrain[i]);
 			}
 		}
 	}
@@ -76,8 +64,6 @@ function entPhysics(self, dt) {
 		}
 	}
 
-	var fric = self.currentGround ? groundFriction : airFriction;
-
 	// Set velocity correctly
 	if (!prevGround && self.currentGround) {
 		if (self.vy >= self.currentGround.vy) {
@@ -87,22 +73,44 @@ function entPhysics(self, dt) {
 		}
 	}
 
-	if (self.updateRV && !bouncedX && !bouncedY)
-		self.updateRV();
-	if (!self.currentGround)
-		self.rvy += gravity;
+	// Let entity update its relative velocity
+	if (self.updateRV)
+		self.updateRV(dt);
 
-	self.vx = self.rvx;
-	self.vy = self.rvy;
+	// Gravity if not on ground
+	if (!self.currentGround)
+		self.rvy += gravity * dt;
 
 	// Friction
+	var fric = self.currentGround ? groundFriction : airFriction;
 	var xRatio = 1 / (1 + (dt * fric));
 	self.rvx *= xRatio;
 
+	// Update velocity based on relative velocity
+	self.vx = self.rvx;
+	self.vy = self.rvy;
+
+	// Move according to ground
 	if (self.currentGround) {
 		self.vx += self.currentGround.vx;
 		self.vy += self.currentGround.vy;
 		self.y = self.currentGround.y - self.h + 1;
+	}
+
+	// Don't end up inside walls horizontally
+	for (var i in sideCollissions) {
+		var ent = sideCollissions[i];
+		var side = entsCollideSide(self, ent, dt);
+
+		if (side == 0 && self.vx >= 0) {
+			self.x = ent.x - self.w;
+			self.rvx = 0;
+			self.vx = 0;
+		} else if (side === 2 && self.vx <= 0) {
+			self.x = ent.x + ent.w;
+			self.rvx = 0;
+			self.vx = 0;
+		}
 	}
 }
 

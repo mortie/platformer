@@ -109,7 +109,7 @@ function Player(x, y) {
 		entPhysics(self, dt);
 	}
 
-	self.updateRV = function() {
+	self.updateRV = function(dt) {
 		var currSpd = self.currentGround ? spd : spdAir;
 
 		if (jumping && self.currentGround)
@@ -121,9 +121,9 @@ function Player(x, y) {
 		}
 
 		if (keys.left)
-			self.rvx -= currSpd;
+			self.rvx -= currSpd * dt;
 		if (keys.right)
-			self.rvx += currSpd;
+			self.rvx += currSpd * dt;
 		if (keys.up && self.currentGround && self.rvy >= -1) {
 			self.rvx = self.vx;
 			self.rvy = self.vy - jmp;

@@ -128,12 +128,12 @@ window.onkeyup = key =>
 
 // Run 'func' in the next game tick
 function nextGameTick(func) {
-	return window.requestAnimationFrame(func);
-	//return setTimeout(() => func(new Date().getTime()), 1000 / 30);
+	//return window.requestAnimationFrame(func);
+	return setTimeout(() => func(new Date().getTime()), 1000 / 60);
 }
 function cancelGameTick(arg) {
-	return window.cancelAnimationFrame(arg);
-	//clearTimeout(arg);
+	//return window.cancelAnimationFrame(arg);
+	clearTimeout(arg);
 }
 
 // Run function 'func' for each entity
@@ -173,16 +173,27 @@ function drawEnt(ent, ctx) {
 var ents = [ plats, terrain, mobs, player, interactive ];
 var timeout = 0;
 var prevTime = 0;
+var nFrames = 0;
+var nMillisec = 0;
 function update(currTime) {
 	var dt;
 	if (!prevTime) {
 		dt = 1;
 	} else {
 		dt = (currTime - prevTime) / (1000 / 60);
-	}	
+		nMillisec += currTime - prevTime;
+	}
 	prevTime = currTime;
+	nFrames += 1;
 
-	if (dt !== 0 && dt < 4) {
+	// Print FPS
+	if (nMillisec >= 1000) {
+		console.log("FPS: "+nFrames);
+		nFrames = nMillisec = 0;
+	}
+
+	// Run physics
+	if (dt !== 0 && dt < 6) {
 		can.width = window.innerWidth;
 		can.height = window.innerHeight;
 
