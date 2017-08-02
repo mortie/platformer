@@ -128,12 +128,12 @@ window.onkeyup = key =>
 
 // Run 'func' in the next game tick
 function nextGameTick(func) {
-	//return window.requestAnimationFrame(func);
-	return setTimeout(() => func(new Date().getTime()), 1000 / 60);
+	return window.requestAnimationFrame(func);
+	//return setTimeout(() => func(new Date().getTime()), 1000 / 60);
 }
 function cancelGameTick(arg) {
-	//return window.cancelAnimationFrame(arg);
-	clearTimeout(arg);
+	return window.cancelAnimationFrame(arg);
+	//clearTimeout(arg);
 }
 
 // Run function 'func' for each entity
