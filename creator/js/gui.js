@@ -1,5 +1,18 @@
 var $$ = document.getElementById.bind(document);
 
+function throttle(fn, time) {
+	if (time == null) time = 100;
+	var timeout = null;
+	return function() {
+		if (timeout != null)
+			return;
+		timeout = setTimeout(() => {
+			timeout = null;
+			fn();
+		}, time);
+	}
+}
+
 var elems = {
 	run: $$("run"),
 	sidebar: $$("sidebar"),
@@ -8,23 +21,41 @@ var elems = {
 };
 
 function onclick(el, fn) {
-	el.addEventListener("click", fn);
+	el.addEventListener("click", fn, false);
+}
+
+function onclickend(el, fn) {
+	el.addEventListener("mouseup", fn, false);
+}
+
+function onclickstart(el, fn) {
+	el.addEventListener("mousedown", fn, false);
 }
 
 function onmove(el, fn) {
-	el.addEventListener("mousemove", fn)
+	el.addEventListener("mousemove", fn, false);
 }
 
 // Click on an entity
+var clickStartX = 0;
+var clickStartY = 0;
+onclickstart(game.can, evt => {
+	clickStartX = evt.x;
+	clickStartY = evt.y;
+});
 var currEnt = null;
-onclick(game.can, evt => {
+onclickend(game.can, evt => {
+	if (
+		Math.abs(evt.x - clickStartX) > 10 ||
+		Math.abs(evt.y - clickStartY) > 10)
+		return;
+
 	var x = evt.x + camx;
 	var y = evt.y + camy;
 
 	for (var i in entities) {
 		var ent = entities[i];
 		var e = ent.realEnt;
-		console.log(x, e.x, e.w, y, e.y, e.h);
 		if (
 			x >= e.x && x <= e.x + e.w &&
 			y >= e.y && y <= e.y + e.h) {
@@ -49,6 +80,7 @@ onmove(game.can, evt => {
 		currEnt.realEnt.x += evt.movementX;
 		currEnt.props.y += evt.movementY;
 		currEnt.realEnt.y += evt.movementY;
+		updateSidebar();
 	} else {
 		camx -= evt.movementX;
 		camy -= evt.movementY;
@@ -57,14 +89,24 @@ onmove(game.can, evt => {
 });
 
 // Update the sidebar to reflect the currently selected entity
-function updateSidebar() {
+function _updateSidebar() {
 	if (currEnt == null) {
 		elems.sidebar.className = "";
 	} else {
 		elems.sidebar.className = "active";
 		elems.sidebar_name.innerText = currEnt.name;
+
+		var p = elems.sidebar_props;
+		p.innerHTML = "";
+
+		for (var i in currEnt.props) {
+			var d = document.createElement("div");
+			d.innerText = i+": "+currEnt.props[i].toString();
+			p.appendChild(d);
+		}
 	}
 }
+var updateSidebar = throttle(_updateSidebar);
 
 // Toggle running
 var running = false;
@@ -73,7 +115,7 @@ onclick(elems.run, () => {
 		elems.run.className = "";
 		stopGame();
 	} else {
-		elems.run.className = "running";
+		elems.run.className = "active";
 		startGame();
 	}
 	running = !running;

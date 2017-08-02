@@ -63,7 +63,7 @@ function validateProps(entType, props) {
 		if (typeof template === "string")
 			return typeof real === template;
 		if (template instanceof RegExp)
-			return typeof real === "string" && template.match(real);
+			return typeof real === "string" && template.test(real);
 		if (typeof template === "function")
 			return real instanceof template;
 
