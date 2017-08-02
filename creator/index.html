@@ -48,10 +48,22 @@ html, body {
 	border-bottom-right-radius: 10px;
 }
 #topbar button.active {
-	background-color: #aaa;
+	background-color: #afa;
 }
 #topbar .spacer {
 	width: 10px;
+	display: inline-block;
+}
+
+#selection {
+	display: none;
+	position: absolute;
+	border: 1px dotted black;
+	padding: 6px;
+	transform: translateX(-7px) translateY(-7px);
+	pointer-events: none;
+}
+#selection.active {
 	display: inline-block;
 }
 		</style>
@@ -69,6 +81,8 @@ html, body {
 			<div id="sidebar-name"></div>
 			<div id="sidebar-props"></div>
 		</div>
+
+		<div id="selection"></div>
 
 		<canvas id="can"></canvas>
 		<script src="../bundle.js"></script>

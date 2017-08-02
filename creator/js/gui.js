@@ -18,6 +18,7 @@ var elems = {
 	sidebar: $$("sidebar"),
 	sidebar_name: $$("sidebar-name"),
 	sidebar_props: $$("sidebar-props"),
+	selection: $$("selection"),
 };
 
 function onclick(el, fn) {
@@ -81,6 +82,8 @@ onmove(game.can, evt => {
 		currEnt.props.y += evt.movementY;
 		currEnt.realEnt.y += evt.movementY;
 		updateSidebar();
+		elems.selection.style.marginLeft = (currEnt.realEnt.x - camx)+"px";
+		elems.selection.style.marginTop = (currEnt.realEnt.y - camy)+"px";
 	} else {
 		camx -= evt.movementX;
 		camy -= evt.movementY;
@@ -92,6 +95,7 @@ onmove(game.can, evt => {
 function _updateSidebar() {
 	if (currEnt == null) {
 		elems.sidebar.className = "";
+		elems.selection.className = "";
 	} else {
 		elems.sidebar.className = "active";
 		elems.sidebar_name.innerText = currEnt.name;
@@ -104,6 +108,12 @@ function _updateSidebar() {
 			d.innerText = i+": "+currEnt.props[i].toString();
 			p.appendChild(d);
 		}
+
+		elems.selection.className = "active";
+		elems.selection.style.marginLeft = (currEnt.realEnt.x - camx)+"px";
+		elems.selection.style.marginTop = (currEnt.realEnt.y - camy)+"px";
+		elems.selection.style.width = (currEnt.realEnt.w)+"px";
+		elems.selection.style.height = (currEnt.realEnt.h)+"px";
 	}
 }
 var updateSidebar = throttle(_updateSidebar);
@@ -126,6 +136,7 @@ function spawnBtn(id, entType) {
 	onclick($$(id), () => {
 		currEnt = spawnEnt(entType, {});
 		render();
+		updateSidebar();
 	});
 }
 spawnBtn("spawn-platform", entTypes.platform);
