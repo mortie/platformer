@@ -214,16 +214,30 @@ function _updateSidebar() {
 
 	// Create listeners
 	if (updated) {
-		elemsAddListener(inputs, "change", evt => {
+		var fn = evt => {
 			var val = getElemVal(evt.target);
 			var name = evt.target.name;
 
 			validateProp(val, currEnt.entType.props[name]);
-			currEnt.props[name] = val;
+			if (evt.srcElement.type === "number") {
+				var delta = Math.abs(val - currEnt.props[name]);
+
+				if (delta <= 1 || evt.type === "change")
+				{
+					currEnt.props[name] = val;
+				}
+			}
+			else
+			{
+				currEnt.props[name] = val;
+			}
+
 			currEnt.createReal();
 			render();
 			updateSelection();
-		});
+		}
+		elemsAddListener(inputs, "input", fn);
+		elemsAddListener(inputs, "change", fn);
 	}
 }
 var updateSidebar = throttle(_updateSidebar);
