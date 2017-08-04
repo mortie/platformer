@@ -6,18 +6,13 @@ function Platform(x, y, w, h, path) {
 		vx: 0, vy: 0 };
 
 	self.draw = function(ctx) {
+		path && drawPath(self, ctx, x, y, path);
+
 		outline(self, ctx);
 		ctx.fillStyle = "black";
 		ctx.strokeStyle = "grey";
 		ctx.fill();
 		ctx.stroke();
-
-		if (path) {
-			ctx.translate(
-				-self.x + x + self.w / 2,
-				-self.y + y + self.h / 2);
-			path.draw(ctx);
-		}
 	}
 
 	self.update = function() {
@@ -46,7 +41,7 @@ function Wall(x, y, w, h) {
 }
 
 // Entity 'victory'
-function Victory(x, y, path, physics) {
+function Victory(x, y, physics, path) {
 	var self = {
 		x, y, w: 30, h: 30,
 		vx: 0, vy: 0,
@@ -54,6 +49,8 @@ function Victory(x, y, path, physics) {
 		currentGround: null };
 
 	self.draw = function(ctx) {
+		path && drawPath(self, ctx, x, y, path);
+
 		ctx.beginPath();
 		ctx.arc(
 			self.w / 2,

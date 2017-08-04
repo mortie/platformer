@@ -10,7 +10,8 @@ player { x: 140, y: 150 };
 
 platform {
 	x: 100, y: 150, w: 100, h: 20,
-	type: "loop",
+	pathType: "loop",
+	pathDraw: true,
 	path: [
 		[ 0, 0, 20 ],
 		[ 300, 0, 100 ],
@@ -21,6 +22,7 @@ platform {
 
 platform {
 	x: 800, y: 150, w: 100, h: 20,
+	pathDraw: true,
 	path: [
 		[ 0, 0 ],
 		[ -300, -50 ],

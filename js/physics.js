@@ -122,7 +122,7 @@ function dist(x1, y1, x2, y2) {
 }
 
 // Path, used for entities which use pathing
-function Path(type, frames, pts) {
+function Path(type, frames, draw, pts) {
 	var self = {};
 
 	type = type || "bounce";
@@ -169,6 +169,9 @@ function Path(type, frames, pts) {
 	}
 
 	self.draw = function(ctx) {
+		if (!draw)
+			return;
+
 		ctx.beginPath();
 		ctx.moveTo(points[0].x, points[0].y);
 		for (var i = 1; i < points.length; ++i) {

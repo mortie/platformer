@@ -66,31 +66,25 @@ var keymap = {
 };
 
 // Information about how to spawn the various entities
+function pathArg() {
+	return o => o.path && Path(o.pathType, o.pathFrames, o.pathDraw, o.path);
+}
 var spawnables = {
 	platform: {
 		func: Platform,
-		args: [
-			"x", "y", "w", "h",
-			o => o.path && Path(o.type, o.frames, o.path),
-		],
+		args: [ "x", "y", "w", "h", pathArg() ],
 		arr: plats,
 	},
 
 	wall: {
 		func: Wall,
-		args: [
-			"x", "y", "w", "h"
-		],
+		args: [ "x", "y", "w", "h" ],
 		arr: terrain,
 	},
 
 	victory: {
 		func: Victory,
-		args: [
-			"x", "y",
-			o => o.path && Path(o.type, o.frames, o.path),
-			"physics"
-		],
+		args: [ "x", "y", "physics", pathArg() ],
 		arr: interactive,
 	},
 
