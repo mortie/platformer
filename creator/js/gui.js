@@ -219,7 +219,7 @@ function _updateSidebar() {
 			var name = evt.target.name;
 
 			validateProp(val, currEnt.entType.props[name]);
-			if (evt.srcElement.type === "number") {
+			if (evt.target.type === "number") {
 				var delta = Math.abs(val - currEnt.props[name]);
 
 				if (delta <= 1 || evt.type === "change") {
