@@ -3,70 +3,7 @@
 	<head>
 		<meta charset="utf-8">
 		<title>Level Creator</title>
-
-		<style>
-html, body {
-	position: fixed;
-	margin: 0px;
-	width: 100%;
-	height: 100%;
-	overflow: hidden;
-}
-
-#topbar, #sidebar {
-	position: absolute;
-}
-
-#sidebar {
-	transition: transform 0.1s;
-	box-sizing: border-box;
-
-	transform: translateX(100px);
-	width: 100px;
-
-	right: 0px;
-	background-color: #eee;
-	padding: 12px;
-
-	border: 1px solid #bbb;
-	border-top: none;
-	border-right: none;
-	border-bottom-left-radius: 10px;
-}
-#sidebar.active {
-	transform: translateX(0px);
-}
-
-#topbar button {
-	font-size: 12pt;
-	background-color: #eee;
-	padding-top: 8px;
-	padding-bottom: 2px;
-	border: 1px solid #bbb;
-	border-top: none;
-	border-bottom-left-radius: 10px;
-	border-bottom-right-radius: 10px;
-}
-#topbar button.active {
-	background-color: #afa;
-}
-#topbar .spacer {
-	width: 10px;
-	display: inline-block;
-}
-
-#selection {
-	display: none;
-	position: absolute;
-	border: 1px dotted black;
-	padding: 6px;
-	transform: translateX(-7px) translateY(-7px);
-	pointer-events: none;
-}
-#selection.active {
-	display: inline-block;
-}
-		</style>
+		<link rel="stylesheet" href="style.css">
 	</head>
 	<body>
 		<div id="topbar">
@@ -77,9 +14,34 @@ html, body {
 			<button id="spawn-wall">Wall</button>
 			<button id="spawn-victory">Victory</button>
 		</div>
+
 		<div id="sidebar">
 			<div id="sidebar-name"></div>
-			<div id="sidebar-props"></div>
+
+			<div id="sidebar-props">
+				<div id="ent-platform">
+					<label>X: <input type="number" name="x"></label>
+					<label>Y: <input type="number" name="y"></label>
+					<label>Width: <input type="number" name="w"></label>
+					<label>Height: <input type="number" name="h"></label>
+				</div>
+
+				<div id="ent-wall">
+					<label>X: <input type="number" name="x"></label>
+					<label>Y: <input type="number" name="y"></label>
+					<label>Width: <input type="number" name="w"></label>
+					<label>Height: <input type="number" name="h"></label>
+				</div>
+
+				<div id="ent-victory">
+					These are the settings for victory
+				</div>
+
+				<div id="ent-player">
+					<label>X: <input type="number" name="x"></label>
+					<label>Y: <input type="number" name="y"></label>
+				</div>
+			</div>
 		</div>
 
 		<div id="selection"></div>

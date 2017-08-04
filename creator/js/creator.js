@@ -46,34 +46,35 @@ var entTypes = {
 
 var entities = [];
 
-// Validate
-function validateProps(entType, props) {
-	function valid(real, template) {
-		if (template instanceof Array) {
-			for (var i in template) {
-				if (valid(real, template[i]))
-					return true;
-			}
-
-			return false;
+// Validate single property
+function validateProp(real, template) {
+	if (template instanceof Array) {
+		for (var i in template) {
+			if (validateProp(real, template[i]))
+				return true;
 		}
 
-		if (template === "null")
-			return real == null;
-		if (typeof template === "string")
-			return typeof real === template;
-		if (template instanceof RegExp)
-			return typeof real === "string" && template.test(real);
-		if (typeof template === "function")
-			return real instanceof template;
-
-		throw new Error("Invalid template.");
+		return false;
 	}
 
+	if (template === "null")
+		return real == null;
+	if (typeof template === "string")
+		return typeof real === template;
+	if (template instanceof RegExp)
+		return typeof real === "string" && template.test(real);
+	if (typeof template === "function")
+		return real instanceof template;
+
+	throw new Error("Invalid template.");
+}
+
+// Validate all properties
+function validateProps(entType, props) {
 	for (var name in entType.props) {
 		var real = props[name];
 		var template = entType.props[name];
-		if (!valid(real, template)) {
+		if (!validateProp(real, template)) {
 			throw new Error(
 				"Invalid value for property "+name+": "+
 				"Expected "+template.toString());

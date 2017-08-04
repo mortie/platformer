@@ -1,4 +1,17 @@
 var $$ = document.getElementById.bind(document);
+var elems = {
+	run: $$("run"),
+	sidebar: $$("sidebar"),
+	sidebar_name: $$("sidebar-name"),
+	sidebar_props: $$("sidebar-props"),
+	props: {
+		platform: $$("ent-platform"),
+		wall: $$("ent-wall"),
+		victory: $$("ent-victory"),
+		player: $$("ent-player"),
+	},
+	selection: $$("selection"),
+};
 
 function throttle(fn, time) {
 	if (time == null) time = 100;
@@ -13,13 +26,37 @@ function throttle(fn, time) {
 	}
 }
 
-var elems = {
-	run: $$("run"),
-	sidebar: $$("sidebar"),
-	sidebar_name: $$("sidebar-name"),
-	sidebar_props: $$("sidebar-props"),
-	selection: $$("selection"),
-};
+function getElemVal(el) {
+	if (el.tagName === "INPUT") {
+		if (el.type === "number")
+			return parseFloat(el.value);
+		else if (el.type === "checkbox")
+			return !!el.checked;
+		else
+			return el.value;
+	} else if (el.tagName === "SELECT") {
+		return el.value;
+	} else {
+		throw new Error("Invalid element type: "+el.tagName);
+	}
+}
+
+function elemsAddListener(elems, evt, fn) {
+	for (var i in elems) {
+		elems[i].addEventListener(evt, fn);
+	}
+	return { fn, elems, evt };
+}
+function elemsRemoveListener(listeners) {
+	for (var i in listeners.elems) {
+		listeners.elmes[i].removeEventListener(listeners.evt, listeners.fn);
+	}
+}
+
+// TODO: fix
+function setElemVal(el, val) {
+	el.value = val;
+}
 
 function onclick(el, fn) {
 	el.addEventListener("click", fn, false);
@@ -82,8 +119,7 @@ onmove(game.can, evt => {
 		currEnt.props.y += evt.movementY;
 		currEnt.realEnt.y += evt.movementY;
 		updateSidebar();
-		elems.selection.style.marginLeft = (currEnt.realEnt.x - camx)+"px";
-		elems.selection.style.marginTop = (currEnt.realEnt.y - camy)+"px";
+		updateSelection();
 	} else {
 		camx -= evt.movementX;
 		camy -= evt.movementY;
@@ -91,29 +127,74 @@ onmove(game.can, evt => {
 	render();
 });
 
+// Update the selection outline element
+function updateSelection() {
+	elems.selection.style.marginLeft = (currEnt.realEnt.x - camx)+"px";
+	elems.selection.style.marginTop = (currEnt.realEnt.y - camy)+"px";
+	elems.selection.style.width = (currEnt.realEnt.w)+"px";
+	elems.selection.style.height = (currEnt.realEnt.h)+"px";
+}
+
 // Update the sidebar to reflect the currently selected entity
+var lastSidebarEnt = null;
+var sidebarListeners = null;
 function _updateSidebar() {
+	var updated = currEnt !== lastSidebarEnt;
+	lastSidebarEnt = currEnt;
+
 	if (currEnt == null) {
 		elems.sidebar.className = "";
 		elems.selection.className = "";
-	} else {
+
+		if (sidebarListeners != null) {
+			elemsRemoveListener(sidebarListeners);
+			sidebarListeners = null;
+		}
+		return;
+	}
+
+	// Init elements
+	if (updated) {
+
+		// Init sidebar
 		elems.sidebar.className = "active";
 		elems.sidebar_name.innerText = currEnt.name;
+		elems.sidebar_props.className = "ent-"+currEnt.name;
 
-		var p = elems.sidebar_props;
-		p.innerHTML = "";
-
-		for (var i in currEnt.props) {
-			var d = document.createElement("div");
-			d.innerText = i+": "+currEnt.props[i].toString();
-			p.appendChild(d);
-		}
-
+		// Init selection
 		elems.selection.className = "active";
-		elems.selection.style.marginLeft = (currEnt.realEnt.x - camx)+"px";
-		elems.selection.style.marginTop = (currEnt.realEnt.y - camy)+"px";
-		elems.selection.style.width = (currEnt.realEnt.w)+"px";
-		elems.selection.style.height = (currEnt.realEnt.h)+"px";
+		updateSelection();
+	}
+
+	// Update property list with values
+	var propsEl = elems.props[currEnt.name];
+	var inputs = [];
+	for (var i in propsEl.childNodes) {
+		var node = propsEl.childNodes[i];
+		if (node.tagName !== "LABEL")
+			continue;
+
+		var input = node.lastChild;
+		if (currEnt.props[input.name] === undefined)
+			throw new Error("Invalid property name for entity: "+input.name);
+		setElemVal(input, currEnt.props[input.name]);
+
+		if (updated)
+			inputs.push(input);
+	}
+
+	// Create listeners
+	if (updated) {
+		elemsAddListener(inputs, "change", evt => {
+			var val = getElemVal(evt.target);
+			var name = evt.target.name;
+
+			validateProp(val, currEnt.entType.props[name]);
+			currEnt.props[name] = val;
+			currEnt.createReal();
+			render();
+			updateSelection();
+		});
 	}
 }
 var updateSidebar = throttle(_updateSidebar);
@@ -125,6 +206,8 @@ onclick(elems.run, () => {
 		elems.run.className = "";
 		stopGame();
 	} else {
+		currEnt = null;
+		updateSidebar();
 		elems.run.className = "active";
 		startGame();
 	}
