@@ -74,6 +74,10 @@ function onmove(el, fn) {
 	el.addEventListener("mousemove", fn, false);
 }
 
+function onkeydown(fn) {
+	window.addEventListener("keydown", fn);
+}
+
 // Click on an entity
 var clickStartX = 0;
 var clickStartY = 0;
@@ -125,6 +129,31 @@ onmove(game.can, evt => {
 		camy -= evt.movementY;
 	}
 	render();
+});
+
+// Keyboard control
+onkeydown(evt => {
+	if (currEnt == null)
+		return;
+	if (document.activeElement !== document.body)
+		return;
+
+	if (evt.keyCode === 37)
+		currEnt.props.x -= 1;
+	else if (evt.keyCode === 38)
+		currEnt.props.y -= 1;
+	else if (evt.keyCode === 39)
+		currEnt.props.x += 1;
+	else if (evt.keyCode === 40)
+		currEnt.props.y += 1;
+	else
+		return;
+
+	currEnt.realEnt.x = currEnt.props.x;
+	currEnt.realEnt.y = currEnt.props.y;
+	render();
+	updateSidebar();
+	updateSelection();
 });
 
 // Update the selection outline element
