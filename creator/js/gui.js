@@ -222,13 +222,10 @@ function _updateSidebar() {
 			if (evt.srcElement.type === "number") {
 				var delta = Math.abs(val - currEnt.props[name]);
 
-				if (delta <= 1 || evt.type === "change")
-				{
+				if (delta <= 1 || evt.type === "change") {
 					currEnt.props[name] = val;
 				}
-			}
-			else
-			{
+			} else {
 				currEnt.props[name] = val;
 			}
 
