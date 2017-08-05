@@ -64,13 +64,20 @@ function entPhysics(self, dt) {
 		}
 	}
 
-	// Set velocity correctly
+	// The first frame we're on ground, adjust
+	// relative velocity
 	if (!prevGround && self.currentGround) {
 		if (self.vy >= self.currentGround.vy) {
 			self.vy = self.currentGround.vy;
-			self.rvx = 0;
+			self.rvx -= self.currentGround.vx;
 			self.rvy = 0;
 		}
+
+	// The first frame we're off the ground,
+	// make relative velocity absolute again
+	} else if (prevGround && !self.currentGround) {
+		self.rvx += prevGround.vx;
+		self.rvy += prevGround.vy;
 	}
 
 	// Let entity update its relative velocity

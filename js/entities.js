@@ -122,8 +122,7 @@ function Player(x, y) {
 		if (keys.right)
 			self.rvx += currSpd * dt;
 		if (keys.up && self.currentGround && self.rvy >= -1) {
-			self.rvx = self.vx;
-			self.rvy = self.vy - jmp;
+			self.rvy -= jmp;
 			jumping = true;
 		}
 	}
