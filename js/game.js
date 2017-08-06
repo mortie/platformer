@@ -25,6 +25,7 @@
  *         maxAge: Maximum age in milliseconds
  *         dimensions: Width and height of a particle
  *         color: Color string, 0-255 RGB separated by comma
+ *         ax, ay: X and Y acceleration for particles
  */
 
 (function() {
