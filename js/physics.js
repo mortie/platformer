@@ -69,8 +69,25 @@ function entPhysics(self, dt) {
 	if (!prevGround && self.currentGround) {
 		if (self.vy >= self.currentGround.vy) {
 			self.vy = self.currentGround.vy;
+
+			// Draw particles
+			var diff = Math.abs(self.rvy - self.currentGround.vy);
+			createParticles({
+				x: self.x + (self.w / 2),
+				y: self.y + self.h,
+				vx: (self.rvx - self.currentGround.vx) * 0.5,
+				vy: -5,
+				count: diff,
+				spread: Math.PI / 16,
+				maxAge: 1000,
+				dimensions: 4,
+				color: "rgba(0, 0, 0, 0.7)",
+			});
+
+			// Adjust relative velocity
 			self.rvx -= self.currentGround.vx;
 			self.rvy = 0;
+
 		}
 
 	// The first frame we're off the ground,

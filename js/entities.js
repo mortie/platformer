@@ -94,6 +94,21 @@ function Player(x, y) {
 
 	var jumping = false;
 
+	var dirtEmitter = {
+		count: 2,
+		vy: -4,
+		maxAge: 1000,
+		spread: Math.PI / 14,
+		color: "#000000",
+		dimensions: 3,
+	};
+	function emitDirt() {
+		dirtEmitter.x = self.x + self.w / 2;
+		dirtEmitter.y = self.y + self.h;
+		dirtEmitter.vx = self.vx * 0.7;
+		createParticles(dirtEmitter);
+	}
+
 	self.draw = function(ctx) {
 		outlineSkewed(self, ctx, 2, 1);
 		ctx.fillStyle = "black";
@@ -117,10 +132,16 @@ function Player(x, y) {
 			jumping = false;
 		}
 
-		if (keys.left)
+		if (keys.left) {
+			if (self.currentGround && self.rvx > 0.1)
+				emitDirt();
 			self.rvx -= currSpd * dt;
-		if (keys.right)
+		}
+		if (keys.right) {
+			if (self.currentGround && self.rvx < -0.1)
+				emitDirt();
 			self.rvx += currSpd * dt;
+		}
 		if (keys.up && self.currentGround && self.rvy >= -1) {
 			self.rvy -= jmp;
 			jumping = true;

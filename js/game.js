@@ -14,6 +14,17 @@
  *
  *     InteractiveEntity extends Entity
  *         function ontouch(ent): Called when touched by ent
+ *
+ *     Particle
+ *         x, y: X and Y coordinates
+ *         vx, vy: X and Y velocity
+ *
+ *     ParticleList
+ *         list: List of Particle
+ *         age: Age in milliseconds
+ *         maxAge: Maximum age in milliseconds
+ *         dimensions: Width and height of a particle
+ *         color: Color string, 0-255 RGB separated by comma
  */
 
 (function() {
@@ -34,12 +45,15 @@ var player = [];
 var interactive = [];
 var entities = [ plats, terrain, mobs, player, interactive ];
 
+var particles = [];
+
 var camx;
 var camy;
 
 var gravity = 0.5;
 var groundFriction = 0.3;
 var airFriction = 0.03;
+var dtDivisor = 1000/60;
 
 var keymap = {
 
@@ -132,8 +146,8 @@ function cancelGameTick(arg) {
 
 // Run function 'func' for each entity
 function entMap(func) {
-	for (var i in ents) {
-		var arr = ents[i];
+	for (var i in entities) {
+		var arr = entities[i];
 		for (var j in arr) {
 			var ent = arr[j];
 			func(ent, arr, j);
@@ -164,7 +178,35 @@ function drawEnt(ent, ctx) {
 	ctx.resetTransform();
 }
 
-var ents = [ plats, terrain, mobs, player, interactive ];
+function updateParticleList(partlist, ctx, dt) {
+	if (partlist.age >= partlist.maxAge) {
+		return false;
+	}
+
+	partlist.age += dt * dtDivisor;
+
+	var alpha = 1 - partlist.age / partlist.maxAge;
+	ctx.beginPath();
+	ctx.fillStyle = partlist.color,
+	ctx.globalAlpha = alpha;
+
+	for (var i in partlist.list) {
+		var p = partlist.list[i];
+
+		// Draw first, to capture the first frame
+		ctx.rect(p.x, p.y, partlist.dimensions, partlist.dimensions);
+
+		// Update position and velocity
+		p.x += p.vx * dt;
+		p.y += p.vy * dt;
+		p.vx += partlist.ax * dt;
+		p.vy += partlist.ay * dt;
+	}
+	ctx.fill();
+
+	return true;
+}
+
 var timeout = 0;
 var prevTime = 0;
 var nFrames = 0;
@@ -174,7 +216,7 @@ function update(currTime) {
 	if (!prevTime) {
 		dt = 1;
 	} else {
-		dt = (currTime - prevTime) / (1000 / 60);
+		dt = (currTime - prevTime) / dtDivisor;
 		nMillisec += currTime - prevTime;
 	}
 	prevTime = currTime;
@@ -182,7 +224,7 @@ function update(currTime) {
 
 	// Print FPS
 	if (nMillisec >= 1000) {
-		console.log("FPS: "+nFrames);
+		//console.log("FPS: "+nFrames);
 		nFrames = nMillisec = 0;
 	}
 
@@ -205,6 +247,15 @@ function update(currTime) {
 
 			drawEnt(ent, ctx);
 		});
+
+		// Draw and update particles
+		ctx.translate(-camx, -camy);
+		for (var i in particles) {
+			if (!updateParticleList(particles[i], ctx, dt)) {
+				particles.splice(i, 1);
+			}
+		}
+		ctx.resetTransform();
 
 		updateCam(player[0], false, dt);
 	}

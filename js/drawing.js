@@ -32,3 +32,44 @@ function drawPath(self, ctx, ox, oy, path) {
 	path.draw(ctx);
 	ctx.translate(-tx, -ty);
 }
+
+// Create particles
+// options: { x, y, vx, vy, ax, ay, count, spread, color, accel, maxAge, dimensions }
+function createParticles(options) {
+	if (options.count === 0)
+		return;
+
+	var spread = options.spread;
+	var x = options.x + options.dimensions / 2;
+	var y = options.y + options.dimensions / 2;
+	var vx = options.vx;
+	var vy = options.vy;
+	var ax = options.ax == null ? 0 : options.ax;
+	var ay = options.ay == null ? gravity : options.ay;
+
+	var list = [];
+	for (var i = 0; i < options.count; ++i) {
+		var angle =
+			Math.atan2(vy, vx) +
+			spread - (Math.random() * spread * 2)
+
+		var magnitude = Math.sqrt(vx * vx + vy * vy);
+
+		var pvx = magnitude * Math.cos(angle);
+		var pvy = magnitude * Math.sin(angle) * ((Math.random() * 0.5) + 1);
+
+		list.push({
+			x: x, y: y,
+			vx: pvx, vy: pvy,
+		});
+	}
+
+	particles.push({
+		list: list,
+		age: 0,
+		maxAge: options.maxAge,
+		dimensions: options.dimensions,
+		color: options.color,
+		ax, ay
+	});
+}
