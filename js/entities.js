@@ -88,10 +88,15 @@ function Player(x, y) {
 		rvx: 0, rvy: 0,
 		currentGround: null };
 
-	var spd = 1.5;
+	var spd = 1.7;
 	var spdAir = 0.3;
-	var jmp = 11;
+	var spdAirLimit = 6;
+	var jmp = 7;
 
+	var jumpTimeMax = 500;
+	var updrift = 0.5 / jumpTimeMax
+
+	var jumpTime = 0;
 	var jumping = false;
 
 	var dirtEmitter = {
@@ -124,27 +129,36 @@ function Player(x, y) {
 	self.updateRV = function(dt) {
 		var currSpd = self.currentGround ? spd : spdAir;
 
-		if (jumping && self.currentGround)
+		if (jumping && (self.currentGround || !keys.up))
+			jumping = false;
+		if (jumpTime <= 0)
 			jumping = false;
 
-		if (jumping && !keys.up && self.rvy < 0) {
-			self.rvy = self.rvy * -0.5
-			jumping = false;
+		if (jumping) {
+			self.rvy -= updrift * jumpTime * dt;
+			jumpTime -= dt * dtScalar;
 		}
 
 		if (keys.left) {
-			if (self.currentGround && self.rvx > 0.1)
-				emitDirt();
-			self.rvx -= currSpd * dt;
+			var newrvx = self.rvx - currSpd * dt;
+			if (self.currentGround || newrvx > -spdAirLimit) {
+				if (self.currentGround && self.rvx > 0.1)
+					emitDirt();
+				self.rvx = newrvx;
+			}
 		}
 		if (keys.right) {
-			if (self.currentGround && self.rvx < -0.1)
-				emitDirt();
-			self.rvx += currSpd * dt;
+			var newrvx = self.rvx + currSpd * dt;
+			if (self.currentGround || newrvx < spdAirLimit) {
+				if (self.currentGround && self.rvx < -0.1)
+					emitDirt();
+				self.rvx = newrvx;
+			}
 		}
 		if (keys.up && self.currentGround && self.rvy >= -1) {
 			self.rvy -= jmp;
 			jumping = true;
+			jumpTime = jumpTimeMax;
 		}
 	}
 

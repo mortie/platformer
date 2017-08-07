@@ -53,8 +53,8 @@ var camy;
 
 var gravity = 0.5;
 var groundFriction = 0.3;
-var airFriction = 0.03;
-var dtDivisor = 1000/60;
+var airFriction = 0.01;
+var dtScalar = 1000/60;
 
 var keymap = {
 
@@ -184,7 +184,7 @@ function updateParticleList(partlist, ctx, dt) {
 		return false;
 	}
 
-	partlist.age += dt * dtDivisor;
+	partlist.age += dt * dtScalar;
 
 	var alpha = 1 - partlist.age / partlist.maxAge;
 	ctx.beginPath();
@@ -217,7 +217,7 @@ function update(currTime) {
 	if (!prevTime) {
 		dt = 1;
 	} else {
-		dt = (currTime - prevTime) / dtDivisor;
+		dt = (currTime - prevTime) / dtScalar;
 		nMillisec += currTime - prevTime;
 	}
 	prevTime = currTime;
