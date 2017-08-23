@@ -4,6 +4,7 @@
  *         number x, y: X and Y coordinate
  *         number w, h: width and height
  *         number vx, vy: X and Y velocity
+ *         number pvx, pvy: previous X and Y velocity, managed by engine
  *         function update(): Update, called each tick
  *         function draw(ctx): Draw, called each tick
  *
@@ -39,22 +40,32 @@ window.game = {
 	drawEnt: drawEnt,
 };
 
+// Include unit conversion functions
+#include "units.js"
+
 var plats = [];
 var terrain = [];
 var mobs = [];
-var player = [];
+var players = [];
 var interactive = [];
-var entities = [ plats, terrain, mobs, player, interactive ];
+
+var player = null;
+var entities = [ plats, terrain, mobs, players, interactive ];
 
 var particles = [];
 
 var camx;
 var camy;
+var shake;
 
-var gravity = 0.5;
-var groundFriction = 0.3;
-var airFriction = 0.01;
-var dtScalar = 1000/60;
+var shakeDecay = 7;
+var gravity = 9.8;
+var groundFriction = 5;
+var airFriction = 1;
+// Delta time should be in seconds, meaning velocities are m/s
+var dtScalar = 1000;
+// 80 pixels per game 'meter' seems reasonable.
+var gameScale = 80;
 
 var keymap = {
 
@@ -106,8 +117,14 @@ var spawnables = {
 	player: {
 		func: Player,
 		args: [ "x", "y" ],
-		arr: player,
+		arr: players,
 	},
+
+	enemyfollower: {
+		func: EnemyFollower,
+		args: [ "x", "y" ],
+		arr: mobs,
+	}
 };
 
 // Find canvas, ctx and level
@@ -156,14 +173,20 @@ function entMap(func) {
 	}
 }
 
-// Make the camera smoothly move towards the player
+// Make the camera smoothly move towards the playesr
 function updateCam(ent, instant, dt) {
-	var tx = ent.x + ent.w / 2 - can.width / 2;
-	var ty = ent.y + ent.h / 2 - can.height / 2;
-	var lerp = instant ? 1 : 0.05;
+	var tx = ent.x + ent.w / 2 - (can.width / gameScale) / 2;
+	var ty = ent.y + ent.h / 2 - (can.height / gameScale) / 2;
+	var lerp = 5;
 
-	camx += (tx - camx) * lerp * dt;
-	camy += (ty - camy) * lerp * dt;
+	if (instant) {
+		console.log("instant");
+		camx = ent.x - can.width / gameScale / 2;
+		camy = ent.y - can.height / gameScale / 2;
+	} else {
+		camx += (tx - camx) * lerp * dt;
+		camy += (ty - camy) * lerp * dt;
+	}
 }
 
 function setCamera(x, y) {
@@ -171,10 +194,10 @@ function setCamera(x, y) {
 	camy = y;
 }
 
-function drawEnt(ent, ctx) {
+function drawEnt(ent, ctx, shakex, shakey) {
 	ctx.translate(
-		ent.x - camx,
-		ent.y - camy);
+		scale(ent.x - camx) + shakex,
+		scale(ent.y - camy) + shakey);
 	ent.draw && ent.draw(ctx);
 	ctx.resetTransform();
 }
@@ -184,18 +207,20 @@ function updateParticleList(partlist, ctx, dt) {
 		return false;
 	}
 
-	partlist.age += dt * dtScalar;
+	partlist.age += dt;
 
 	var alpha = 1 - partlist.age / partlist.maxAge;
+	if (alpha < 0) alpha = 0;
 	ctx.beginPath();
 	ctx.fillStyle = partlist.color,
 	ctx.globalAlpha = alpha;
 
+	var pd = scale(partlist.dimensions);
 	for (var i in partlist.list) {
 		var p = partlist.list[i];
 
 		// Draw first, to capture the first frame
-		ctx.rect(p.x, p.y, partlist.dimensions, partlist.dimensions);
+		ctx.rect(scale(p.x), scale(p.y), pd, pd);
 
 		// Update position and velocity
 		p.x += p.vx * dt;
@@ -204,6 +229,7 @@ function updateParticleList(partlist, ctx, dt) {
 		p.vy += partlist.ay * dt;
 	}
 	ctx.fill();
+	ctx.globalAlpha = 1;
 
 	return true;
 }
@@ -211,6 +237,7 @@ function updateParticleList(partlist, ctx, dt) {
 var timeout = 0;
 var prevTime = 0;
 var nFrames = 0;
+var fps = 0;
 var nMillisec = 0;
 function update(currTime) {
 	var dt;
@@ -225,15 +252,15 @@ function update(currTime) {
 
 	// Print FPS
 	if (nMillisec >= 1000) {
-		//console.log("FPS: "+nFrames);
+		fps = nFrames;
 		nFrames = nMillisec = 0;
 	}
 
-	// Run physics
 	if (dt !== 0 && dt < 6) {
 		can.width = window.innerWidth;
 		can.height = window.innerHeight;
 
+		// Run physics
 		entMap((ent, arr, j) => {
 			if (ent.dead) {
 				arr.splice(j, 1);
@@ -242,15 +269,29 @@ function update(currTime) {
 			ent.update && ent.update(dt);
 		});
 
+		// Make screen shake
+		var shakex = 0;
+		var shakey = 0;
+		if (shake > 0.1) {
+			shakex = (Math.random() - 0.5) * shake;
+			shakey = (Math.random() - 0.5) * shake;
+
+			var xRatio = 1 / (1 + (dt * shakeDecay));
+			shake *= xRatio;
+		}
+
+		// Draw entities
 		entMap(ent => {
 			ent.x += ent.vx * dt;
 			ent.y += ent.vy * dt;
+			ent.pvx = ent.vx;
+			ent.pvy = ent.vy;
 
-			drawEnt(ent, ctx);
+			drawEnt(ent, ctx, shakex, shakey);
 		});
 
 		// Draw and update particles
-		ctx.translate(-camx, -camy);
+		ctx.translate(scale(-camx), scale(-camy));
 		for (var i in particles) {
 			if (!updateParticleList(particles[i], ctx, dt)) {
 				particles.splice(i, 1);
@@ -258,7 +299,10 @@ function update(currTime) {
 		}
 		ctx.resetTransform();
 
-		updateCam(player[0], false, dt);
+		// Draw FPS
+		ctx.fillText("FPS: "+fps, 10, 15);
+
+		updateCam(players[0], false, dt);
 	}
 
 	if (timeout !== null)
@@ -281,11 +325,15 @@ function createEnt(name, obj) {
 	});
 
 	var ent = s.func.apply(null, args);
+	ent.pvx = ent.vx;
+	ent.pvy = ent.vy;
 	return ent;
 }
 
 function spawn(name, obj) {
 	var s = spawnables[name];
+	if (!s)
+		throw new Error("Unknown entity type: "+name);
 	s.arr.push(createEnt(name, obj));
 }
 
@@ -306,6 +354,7 @@ function init(lstr, nostart) {
 	// Set initial values
 	camx = 0;
 	camy = 0;
+	shake = 0;
 	keys = {};
 	entities.forEach(arr => arr.length = 0);
 	can.width = window.innerWidth;
@@ -336,9 +385,13 @@ function init(lstr, nostart) {
 		spawn(name, obj);
 	});
 
+	if (players.length !== 1)
+		throw new Error("Invalid number of players!");
+	player = players[0];
+
 	// Set camera to initial position
 	if (!nostart)
-		updateCam(player[0], true, 1);
+		updateCam(players[0], true);
 
 	// Start
 	timeout = 0;

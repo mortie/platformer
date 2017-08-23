@@ -43,7 +43,7 @@ function Wall(x, y, w, h) {
 // Entity 'victory'
 function Victory(x, y, physics, path) {
 	var self = {
-		x, y, w: 30, h: 30,
+		x, y, w: 0.75, h: 0.75,
 		vx: 0, vy: 0,
 		rvx: 0, rvy: 0,
 		currentGround: null };
@@ -71,7 +71,9 @@ function Victory(x, y, physics, path) {
 	}
 
 	self.ontouch = function(ent) {
-		console.log(ent);
+		if (ent !== player)
+			return;
+
 		stop();
 		alert("Victory!");
 		setTimeout(init, 0);
@@ -83,39 +85,42 @@ function Victory(x, y, physics, path) {
 // Entity 'player'
 function Player(x, y) {
 	var self = {
-		x, y, w: 20, h: 20,
+		x, y, w: 0.25, h: 0.25,
 		vx: 0, vy: 0,
 		rvx: 0, rvy: 0,
 		currentGround: null };
 
-	var spd = 1.7;
-	var spdAir = 0.3;
+	var spd = 28;
+	var spdAir = 8;
 	var spdAirLimit = 6;
-	var jmp = 7;
+	var jmp = 4;
 
-	var jumpTimeMax = 500;
-	var updrift = 0.5 / jumpTimeMax
+	var jumpTimeMax = 0.4;
+	var updrift = 40;
 
 	var jumpTime = 0;
 	var jumping = false;
 
+	var prevGround = null;
+
 	var dirtEmitter = {
 		count: 2,
 		vy: -4,
-		maxAge: 1000,
+		maxAge: 1,
 		spread: Math.PI / 14,
 		color: "#000000",
-		dimensions: 3,
+		dimensions: unit.cm(7),
 	};
 	function emitDirt() {
 		dirtEmitter.x = self.x + self.w / 2;
 		dirtEmitter.y = self.y + self.h;
-		dirtEmitter.vx = self.vx * 0.7;
+		dirtEmitter.vx = self.vx;
 		createParticles(dirtEmitter);
+		screenShake(Math.abs(self.vx) * 2)
 	}
 
 	self.draw = function(ctx) {
-		outlineSkewed(self, ctx, 2, 1);
+		outlineSkewed(self, ctx, unit.cm(5), unit.cm(3));
 		ctx.fillStyle = "black";
 		ctx.strokeStyle = "grey";
 		ctx.fill();
@@ -134,11 +139,13 @@ function Player(x, y) {
 		if (jumpTime <= 0)
 			jumping = false;
 
+		// Hold up to jump higher
 		if (jumping) {
 			self.rvy -= updrift * jumpTime * dt;
-			jumpTime -= dt * dtScalar;
+			jumpTime -= dt;
 		}
 
+		// Move left, right, up
 		if (keys.left) {
 			var newrvx = self.rvx - currSpd * dt;
 			if (self.currentGround || newrvx > -spdAirLimit) {
@@ -159,6 +166,79 @@ function Player(x, y) {
 			self.rvy -= jmp;
 			jumping = true;
 			jumpTime = jumpTimeMax;
+		}
+
+		// Shake screen on landing
+		if (self.currentGround && !prevGround) {
+			screenShake((self.pvy - self.currentGround.vy - 4) * 10);
+		}
+
+		prevGround = self.currentGround;
+	}
+
+	return self;
+}
+
+function EnemyFollower(x, y) {
+	var self = {
+		x, y, w: 0.4, h: 0.5,
+		vx: 0, vy: 0,
+		rvx: 0, rvy: 0,
+		currentGround: null };
+
+	var spd = 20;
+	var jmp = 5;
+	var invincible = false;
+	var invincnt = 0;
+	var health = 3;
+
+	self.draw = function(ctx) {
+		outlineSkewed(self, ctx, unit.cm(5), unit.cm(3));
+		if (invincible) {
+			if (invincnt % 4 < 2)
+				ctx.fillStyle = "rgb(255, 50, 50)";
+			else
+				ctx.fillStyle = "rgba(255, 50, 50, 0.3)";
+			invincnt += 1;
+		} else {
+			ctx.fillStyle = "rgb(255, 50, 50)";
+		}
+		ctx.strokeStyle = "grey";
+		ctx.fill();
+		ctx.stroke();
+	}
+
+	self.update = function(dt) {
+		entPhysics(self, dt);
+
+		if (!invincible && entsCollide(self, player)) {
+			var side = entsCollideSide(self, player, dt);
+			if (side === 3) {
+				health -= 1;
+				if (health === 0) {
+					self.dead = true;
+				} else {
+					self.h /= 1.8;
+					invincible = true;
+					setTimeout(() => invincible = false, 1000);
+				}
+			} else {
+				stop();
+				alert("Loss!");
+				setTimeout(init, 0);
+			}
+		}
+	}
+
+	self.updateRV = function(dt) {
+		if (self.currentGround) {
+			if (self.x + self.w / 2 > player.x + player.h / 2)
+				self.rvx -= spd * dt;
+			else
+				self.rvx += spd * dt;
+
+			if (self.y > player.y + 1.5)
+				self.rvy = -jmp;
 		}
 	}
 

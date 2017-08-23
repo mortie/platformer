@@ -79,8 +79,8 @@ function entPhysics(self, dt) {
 				vy: -5,
 				count: diff,
 				spread: Math.PI / 16,
-				maxAge: 1000,
-				dimensions: 4,
+				maxAge: 1,
+				dimensions: unit.cm(10),
 				color: "rgba(0, 0, 0, 0.7)",
 			});
 
@@ -93,8 +93,8 @@ function entPhysics(self, dt) {
 	// The first frame we're off the ground,
 	// make relative velocity absolute again
 	} else if (prevGround && !self.currentGround) {
-		self.rvx += prevGround.vx;
-		self.rvy += prevGround.vy;
+		self.rvx += prevGround.pvx;
+		self.rvy += prevGround.pvy;
 	}
 
 	// Let entity update its relative velocity
@@ -118,7 +118,7 @@ function entPhysics(self, dt) {
 	if (self.currentGround) {
 		self.vx += self.currentGround.vx;
 		self.vy += self.currentGround.vy;
-		self.y = self.currentGround.y - self.h + 1;
+		self.y = self.currentGround.y - self.h;
 	}
 
 	// Don't end up inside walls horizontally
@@ -188,8 +188,8 @@ function Path(type, frames, draw, pts) {
 		}
 
 		curr = points[curri];
-		ent.vx = (curr.x - rx) / curr.n;
-		ent.vy = (curr.y - ry) / curr.n;
+		ent.vx = ((curr.x - rx) / curr.n) * 5;
+		ent.vy = ((curr.y - ry) / curr.n) * 5;
 	}
 
 	self.draw = function(ctx) {
@@ -197,9 +197,9 @@ function Path(type, frames, draw, pts) {
 			return;
 
 		ctx.beginPath();
-		ctx.moveTo(points[0].x, points[0].y);
+		ctx.moveTo(scale(points[0].x), scale(points[0].y));
 		for (var i = 1; i < points.length; ++i) {
-			ctx.lineTo(points[i].x, points[i].y);
+			ctx.lineTo(scale(points[i].x), scale(points[i].y));
 		}
 		ctx.closePath();
 		ctx.strokeStyle = "black";

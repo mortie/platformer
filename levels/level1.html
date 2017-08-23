@@ -5,40 +5,48 @@
 		<title>Level 1</title>
 	</head>
 	<body>
-		<pre id="level">
-player { x: 140, y: 150 };
+		<pre style="display: none" id="level">
+player { x: 1.75, y: 1.875 };
 
 platform {
-	x: 100, y: 150, w: 100, h: 20,
+	x: 1.25, y: 1.875, w: 99.25, h: 0.25,
+};
+
+enemyfollower { x: 20, y: 1.875 };
+		</pre>
+		<pre style="display: none" id="_level">
+player { x: 1.75, y: 1.875 };
+platform {
+	x: 2.5, y: 3.75, w: 2.5, h: 0.5,
 	pathType: "loop",
 	pathDraw: true,
 	path: [
 		[ 0, 0, 20 ],
-		[ 300, 0, 100 ],
-		[ 300, 200, 20 ],
-		[ 0, 200, 100 ],
+		[ 7.5, 0, 100 ],
+		[ 7.5, 5, 20 ],
+		[ 0, 5, 100 ],
 	],
 };
 
 platform {
-	x: 800, y: 150, w: 100, h: 20,
+	x: 20, y: 3.75, w: 2.5, h: 0.5,
 	pathDraw: true,
 	path: [
 		[ 0, 0 ],
-		[ -300, -50 ],
+		[ -7.5, -1.25 ],
 	],
 };
 
 wall {
-	x: 500, y: 400, w: 200, h: 20,
+	x: 12.5, y: 10, w: 5, h: 0.5,
 };
 
 victory {
-	x: 835, y: 120, w: 100, h: 20,
+	x: 20.875, y: 3, w: 2.5, h: 0.5,
 	physics: true,
 };
 
-platform { x: 100, y: 50, w: 100, h: 20 };
+platform { x: 2.5, y: 1.25, w: 2.5, h: 0.5 };
 		</pre>
 
 		<canvas id="can"></canvas>

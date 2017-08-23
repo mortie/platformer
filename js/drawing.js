@@ -1,11 +1,14 @@
+function scale(x) {
+	return x * gameScale;
+}
 
 // Create path around entity
 function outline(self, ctx) {
 	ctx.beginPath();
 	ctx.moveTo(0, 0);
-	ctx.lineTo(self.w, 0);
-	ctx.lineTo(self.w, self.h);
-	ctx.lineTo(0, self.h);
+	ctx.lineTo(scale(self.w), 0);
+	ctx.lineTo(scale(self.w), scale(self.h));
+	ctx.lineTo(0, scale(self.h));
 	ctx.closePath();
 }
 
@@ -17,20 +20,26 @@ function outlineSkewed(self, ctx, mx, my) {
 	var offsY = self.vy * my;
 
 	ctx.beginPath();
-	ctx.moveTo(-offsX, - offsY);
-	ctx.lineTo(-offsX + self.w, - offsY);
-	ctx.lineTo(self.w, self.h);
-	ctx.lineTo(0, self.h);
+	ctx.moveTo(scale(-offsX), scale(-offsY));
+	ctx.lineTo(scale(-offsX + self.w), scale(-offsY));
+	ctx.lineTo(scale(self.w), scale(self.h));
+	ctx.lineTo(0, scale(self.h));
 	ctx.closePath();
 }
 
 // Draw a path from the center of entity
 function drawPath(self, ctx, ox, oy, path) {
-	var tx = -self.x + ox + self.w / 2;
-	var ty = -self.y + oy + self.h / 2;
+	var tx = scale(-self.x + ox + self.w / 2);
+	var ty = scale(-self.y + oy + self.h / 2);
 	ctx.translate(tx, ty);
 	path.draw(ctx);
 	ctx.translate(-tx, -ty);
+}
+
+// Shake the screen
+function screenShake(n) {
+	if (shake < n)
+		shake = n;
 }
 
 // Create particles
