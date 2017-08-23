@@ -143,6 +143,9 @@ window.onkeydown = key =>
 window.onkeyup = key =>
 	keys[keymap[key.keyCode]] = false;
 
+// General utilities
+#include "util.js"
+
 // Utilities for drawing
 #include "drawing.js"
 
@@ -151,16 +154,6 @@ window.onkeyup = key =>
 
 // Entity constructors
 #include "entities.js"
-
-// Run 'func' in the next game tick
-function nextGameTick(func) {
-	return window.requestAnimationFrame(func);
-	//return setTimeout(() => func(new Date().getTime()), 1000 / 60);
-}
-function cancelGameTick(arg) {
-	return window.cancelAnimationFrame(arg);
-	//clearTimeout(arg);
-}
 
 // Run function 'func' for each entity
 function entMap(func) {
@@ -242,7 +235,7 @@ var nMillisec = 0;
 function update(currTime) {
 	var dt;
 	if (!prevTime) {
-		dt = 1;
+		dt = (1000 / 60) / dtScalar;;
 	} else {
 		dt = (currTime - prevTime) / dtScalar;
 		nMillisec += currTime - prevTime;
@@ -357,6 +350,7 @@ function init(lstr, nostart) {
 	shake = 0;
 	keys = {};
 	entities.forEach(arr => arr.length = 0);
+	particles.length = 0;
 	can.width = window.innerWidth;
 	can.height = window.innerHeight;
 

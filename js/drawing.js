@@ -67,8 +67,9 @@ function createParticles(options) {
 		var pvx = magnitude * Math.cos(angle);
 		var pvy = magnitude * Math.sin(angle) * ((Math.random() * 0.5) + 1);
 
+		var offset = options.dimensions / 2;
 		list.push({
-			x: x, y: y,
+			x: x - offset, y: y - offset,
 			vx: pvx, vy: pvy,
 		});
 	}

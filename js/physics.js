@@ -1,4 +1,22 @@
 
+// Duplicate a physics entity
+function entDupe(self, target) {
+	target.x = self.x;
+	target.y = self.y;
+	target.w = self.w;
+	target.h = self.h;
+	target.vx = self.vx;
+	target.vy = self.vy;
+	target.rvx = self.rvx;
+	target.rvy = self.rvy;
+	target.currentGround = self.currentGround;
+}
+
+// Bounce ent1 off of ent2
+function entBounceUp(ent1, ent2) {
+	ent1.rvy = -Math.abs(ent1.rvy) + ent2.rvy;
+}
+
 // Does two entities collide?
 function entsCollide(ent1, ent2) {
 	return (
@@ -19,9 +37,10 @@ function entsCollideSide(ent1, ent2, dt) {
 		return 2;
 }
 
-function entPhysics(self, dt) {
-	var prevGround = self.currentGround;
-	if (prevGround && !entsCollide(self, prevGround))
+// Find all collissions with terrain, and set self.currentGround
+// to the appropriate entity, or null
+function entGroundCollissions(self, dt) {
+	if (self.currentGround && !entsCollide(self, self.currentGround))
 		self.currentGround = null;
 
 	// Are we colliding with terrain?
@@ -37,7 +56,6 @@ function entPhysics(self, dt) {
 			// bottom
 			} else if (side === 3 && self.rvy < 0) {
 				self.rvy = Math.abs(self.rvy);
-				self.y += self.rvy;
 			}
 
 			if (side === 0 || side === 2) {
@@ -49,12 +67,25 @@ function entPhysics(self, dt) {
 	// Are we colliding with platforms?
 	if (!self.currentGround) {
 		for (var i in plats) {
-			if (self.vy >= plats[i].vy && entsCollide(self, plats[i])) {
-				self.currentGround = plats[i];
-				break;
+			var plat = plats[i];
+			if (self.vy >= plat.vy && entsCollide(self, plat)) {
+				if (self.y + self.h < plat.y + plat.h) {
+					self.currentGround = plats[i];
+					break;
+				}
 			}
 		}
 	}
+
+	return sideCollissions;
+}
+
+// Physics
+function entPhysics(self, dt) {
+	var prevGround = self.currentGround;
+
+	// Are we colliding with terrain?
+	var sideCollissions = entGroundCollissions(self, dt);
 
 	// Are we colliding with interactive elements?
 	for (var i in interactive) {

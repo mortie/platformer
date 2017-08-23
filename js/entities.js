@@ -127,6 +127,10 @@ function Player(x, y) {
 		ctx.stroke();
 	}
 
+	self.bounceUp = function() {
+		self.rvy = -Math.abs(self.rvy);
+	}
+
 	self.update = function(dt) {
 		entPhysics(self, dt);
 	}
@@ -192,6 +196,17 @@ function EnemyFollower(x, y) {
 	var invincnt = 0;
 	var health = 3;
 
+	var future = {};
+
+	var canJump = true;
+	function jump(jmp) {
+		if (canJump) {
+			self.rvy -= jmp;
+			canJump = false;
+			setTimeout(() => canJump = true, randint(1500, 3000));
+		}
+	}
+
 	self.draw = function(ctx) {
 		outlineSkewed(self, ctx, unit.cm(5), unit.cm(3));
 		if (invincible) {
@@ -212,15 +227,16 @@ function EnemyFollower(x, y) {
 		entPhysics(self, dt);
 
 		if (!invincible && entsCollide(self, player)) {
-			var side = entsCollideSide(self, player, dt);
-			if (side === 3) {
+			var side = entsCollideSide(player, self, dt);
+			if (side === 1) {
 				health -= 1;
 				if (health === 0) {
 					self.dead = true;
 				} else {
 					self.h /= 1.8;
 					invincible = true;
-					setTimeout(() => invincible = false, 1000);
+					entBounceUp(player, self);
+					setTimeout(() => invincible = false, 300);
 				}
 			} else {
 				stop();
@@ -238,7 +254,15 @@ function EnemyFollower(x, y) {
 				self.rvx += spd * dt;
 
 			if (self.y > player.y + 1.5)
-				self.rvy = -jmp;
+				jump(jmp);
+
+			// Will we be on ground next tick?
+			entDupe(self, future);
+			future.x += future.vx * dt * 1;
+			future.y += future.vy * dt * 1;
+			entGroundCollissions(future, dt);
+			if (!future.currentGround)
+				jump(jmp);
 		}
 	}
 
