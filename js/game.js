@@ -1,32 +1,34 @@
 /*
  * Interfaces
  *     Entity
- *         number x, y: X and Y coordinate
- *         number w, h: width and height
- *         number vx, vy: X and Y velocity
- *         number pvx, pvy: previous X and Y velocity, managed by engine
- *         function update(): Update, called each tick
- *         function draw(ctx): Draw, called each tick
+ *         string name: The name of the entity type. Managed by engine.
+ *         number x, y: X and Y coordinate.
+ *         number w, h: width and height.
+ *         number vx, vy: X and Y velocity.
+ *         number pvx, pvy: Previous X and Y velocity. Managed by engine.
+ *         function update(): Update, called each tick.
+ *         function draw(ctx): Draw, called each tick.
  *
  *     PhysicsEntity extends Entity
- *         number rvx, rvy: X and Y velocity relative to platform
+ *         number rvx, rvy: X and Y velocity relative to platform.
+ *         boolean ignorePlatforms: Whether to go through platforms or not.
  *         Entity currentGround: Current ground entity, or null.
- *         function updateRV(): Called by entPhysics, update rvx and rvy
+ *         function updateRV(): Called by entPhysics, update rvx and rvy.
  *
  *     InteractiveEntity extends Entity
- *         function ontouch(ent): Called when touched by ent
+ *         function ontouch(ent): Called when touched by ent.
  *
  *     Particle
- *         x, y: X and Y coordinates
- *         vx, vy: X and Y velocity
+ *         x, y: X and Y coordinates.
+ *         vx, vy: X and Y velocity.
  *
  *     ParticleList
- *         list: List of Particle
- *         age: Age in milliseconds
- *         maxAge: Maximum age in milliseconds
- *         dimensions: Width and height of a particle
- *         color: Color string, 0-255 RGB separated by comma
- *         ax, ay: X and Y acceleration for particles
+ *         list: List of Particle.
+ *         age: Age in milliseconds.
+ *         maxAge: Maximum age in milliseconds.
+ *         dimensions: Width and height of a particle.
+ *         color: Color string, 0-255 RGB separated by comma.
+ *         ax, ay: X and Y acceleration for particles.
  */
 
 (function() {
@@ -43,6 +45,7 @@ window.game = {
 // Include unit conversion functions
 #include "units.js"
 
+var ents = {};
 var plats = [];
 var terrain = [];
 var mobs = [];
@@ -64,6 +67,7 @@ var groundFriction = 5;
 var airFriction = 1;
 // Delta time should be in seconds, meaning velocities are m/s
 var dtScalar = 1000;
+var dtMax = 0.1;
 // 80 pixels per game 'meter' seems reasonable.
 var gameScale = 80;
 
@@ -155,17 +159,6 @@ window.onkeyup = key =>
 // Entity constructors
 #include "entities.js"
 
-// Run function 'func' for each entity
-function entMap(func) {
-	for (var i in entities) {
-		var arr = entities[i];
-		for (var j in arr) {
-			var ent = arr[j];
-			func(ent, arr, j);
-		}
-	}
-}
-
 // Make the camera smoothly move towards the playesr
 function updateCam(ent, instant, dt) {
 	var tx = ent.x + ent.w / 2 - (can.width / gameScale) / 2;
@@ -205,7 +198,7 @@ function updateParticleList(partlist, ctx, dt) {
 	var alpha = 1 - partlist.age / partlist.maxAge;
 	if (alpha < 0) alpha = 0;
 	ctx.beginPath();
-	ctx.fillStyle = partlist.color,
+	ctx.fillStyle = partlist.color;
 	ctx.globalAlpha = alpha;
 
 	var pd = scale(partlist.dimensions);
@@ -222,7 +215,7 @@ function updateParticleList(partlist, ctx, dt) {
 		p.vy += partlist.ay * dt;
 	}
 	ctx.fill();
-	ctx.globalAlpha = 1;
+	ctx.globalAlpha = 1.0;
 
 	return true;
 }
@@ -243,24 +236,28 @@ function update(currTime) {
 	prevTime = currTime;
 	nFrames += 1;
 
-	// Print FPS
+	// Find FPS
 	if (nMillisec >= 1000) {
 		fps = nFrames;
 		nFrames = nMillisec = 0;
 	}
 
-	if (dt !== 0 && dt < 6) {
+	if (dt !== 0 && dt < dtMax) {
 		can.width = window.innerWidth;
 		can.height = window.innerHeight;
 
 		// Run physics
-		entMap((ent, arr, j) => {
-			if (ent.dead) {
-				arr.splice(j, 1);
-			}
+		for (var i = 0; i < entities.length; ++i) {
+			for (var j = entities[i].length - 1; j >= 0; --j) {
+				var ent = entities[i][j];
 
-			ent.update && ent.update(dt);
-		});
+				if (ent.dead) {
+					entities[i].splice(j, 1);
+				}
+
+				ent.update && ent.update(dt);
+			}
+		}
 
 		// Make screen shake
 		var shakex = 0;
@@ -273,16 +270,6 @@ function update(currTime) {
 			shake *= xRatio;
 		}
 
-		// Draw entities
-		entMap(ent => {
-			ent.x += ent.vx * dt;
-			ent.y += ent.vy * dt;
-			ent.pvx = ent.vx;
-			ent.pvy = ent.vy;
-
-			drawEnt(ent, ctx, shakex, shakey);
-		});
-
 		// Draw and update particles
 		ctx.translate(scale(-camx), scale(-camy));
 		for (var i in particles) {
@@ -292,7 +279,21 @@ function update(currTime) {
 		}
 		ctx.resetTransform();
 
+		// Draw entities
+		for (var i = 0; i < entities.length; ++i) {
+			for (var j = 0; j < entities[i].length; ++j) {
+				var ent = entities[i][j];
+				ent.x += ent.vx * dt;
+				ent.y += ent.vy * dt;
+				ent.pvx = ent.vx;
+				ent.pvy = ent.vy;
+
+				drawEnt(ent, ctx, shakex, shakey);
+			}
+		}
+
 		// Draw FPS
+		ctx.fillStyle = "black";
 		ctx.fillText("FPS: "+fps, 10, 15);
 
 		updateCam(players[0], false, dt);
@@ -320,6 +321,13 @@ function createEnt(name, obj) {
 	var ent = s.func.apply(null, args);
 	ent.pvx = ent.vx;
 	ent.pvy = ent.vy;
+	ent.name = name;
+	ent.id = obj.id;
+	if (ent.id && ents[ent.id])
+		throw new Error("Duplicate id: "+ent.id);
+	if (ent.id)
+		ents[i] = ent;
+
 	return ent;
 }
 
@@ -339,7 +347,8 @@ function init(lstr, nostart) {
 		"height: 100%;"+
 		"padding: 0px;"+
 		"margin: 0px;"+
-		"overflow: hidden;";
+		"overflow: hidden;"+
+		"position: fixed;";
 
 	if (level)
 		level.style.display = "none";

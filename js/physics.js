@@ -1,20 +1,8 @@
 
-// Duplicate a physics entity
-function entDupe(self, target) {
-	target.x = self.x;
-	target.y = self.y;
-	target.w = self.w;
-	target.h = self.h;
-	target.vx = self.vx;
-	target.vy = self.vy;
-	target.rvx = self.rvx;
-	target.rvy = self.rvy;
-	target.currentGround = self.currentGround;
-}
-
 // Bounce ent1 off of ent2
-function entBounceUp(ent1, ent2) {
-	ent1.rvy = -Math.abs(ent1.rvy) + ent2.rvy;
+function entBounceUp(ent1, ent2, dt) {
+	ent1.rvy = -Math.abs(ent1.pvy) + ent2.rvy;
+	ent1.y += ent1.rvy * dt;
 }
 
 // Does two entities collide?
@@ -87,6 +75,12 @@ function entPhysics(self, dt) {
 	// Are we colliding with terrain?
 	var sideCollissions = entGroundCollissions(self, dt);
 
+	// Should we ignore the current ground?
+	var ignoreGround =
+		self.ignorePlatforms &&
+		self.currentGround &&
+		self.currentGround.name === "platform";
+
 	// Are we colliding with interactive elements?
 	for (var i in interactive) {
 		var ent = interactive[i];
@@ -107,7 +101,7 @@ function entPhysics(self, dt) {
 				x: self.x + (self.w / 2),
 				y: self.y + self.h,
 				vx: (self.rvx - self.currentGround.vx) * 0.5,
-				vy: -5,
+				vy: -3,
 				count: diff,
 				spread: Math.PI / 16,
 				maxAge: 1,
@@ -128,12 +122,17 @@ function entPhysics(self, dt) {
 		self.rvy += prevGround.pvy;
 	}
 
+	// Don't build up phantom relative velocity
+	// turning on and off ignoreGround
+	if (self.currentGround && !ignoreGround)
+		self.rvy = self.currentGround.pvy;
+
 	// Let entity update its relative velocity
 	if (self.updateRV)
 		self.updateRV(dt);
 
 	// Gravity if not on ground
-	if (!self.currentGround)
+	if (!self.currentGround || ignoreGround)
 		self.rvy += gravity * dt;
 
 	// Friction
@@ -146,7 +145,7 @@ function entPhysics(self, dt) {
 	self.vy = self.rvy;
 
 	// Move according to ground
-	if (self.currentGround) {
+	if (self.currentGround && !ignoreGround) {
 		self.vx += self.currentGround.vx;
 		self.vy += self.currentGround.vy;
 		self.y = self.currentGround.y - self.h;

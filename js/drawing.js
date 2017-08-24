@@ -1,5 +1,5 @@
 function scale(x) {
-	return x * gameScale;
+	return Math.floor(x * gameScale);
 }
 
 // Create path around entity
@@ -18,6 +18,10 @@ function outlineSkewed(self, ctx, mx, my) {
 	if (my == null) my = 1;
 	var offsX = self.vx * mx;
 	var offsY = self.vy * my;
+	if (Math.abs(offsX) < 0.01)
+		offsX = 0;
+	if (Math.abs(offsY) < 0.01)
+		offsY = 0;
 
 	ctx.beginPath();
 	ctx.moveTo(scale(-offsX), scale(-offsY));
@@ -49,8 +53,8 @@ function createParticles(options) {
 		return;
 
 	var spread = options.spread;
-	var x = options.x + options.dimensions / 2;
-	var y = options.y + options.dimensions / 2;
+	var x = options.x - options.dimensions / 2;
+	var y = options.y - options.dimensions;
 	var vx = options.vx;
 	var vy = options.vy;
 	var ax = options.ax == null ? 0 : options.ax;
@@ -67,9 +71,8 @@ function createParticles(options) {
 		var pvx = magnitude * Math.cos(angle);
 		var pvy = magnitude * Math.sin(angle) * ((Math.random() * 0.5) + 1);
 
-		var offset = options.dimensions / 2;
 		list.push({
-			x: x - offset, y: y - offset,
+			x: x, y: y,
 			vx: pvx, vy: pvy,
 		});
 	}

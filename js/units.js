@@ -8,4 +8,5 @@ var unit = {
 	dm: x => x * 0.1,
 	cm: x => x * 0.01,
 	mm: x => x * 0.001,
+	pixels: x => x / gameScale,
 };

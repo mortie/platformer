@@ -31,7 +31,9 @@ function Wall(x, y, w, h) {
 
 	self.draw = function(ctx) {
 		outline(self, ctx);
+		ctx.fillStyle = "white";
 		ctx.strokeStyle = "black";
+		ctx.fill();
 		ctx.stroke();
 	}
 
@@ -105,23 +107,23 @@ function Player(x, y) {
 
 	var dirtEmitter = {
 		count: 2,
-		vy: -4,
+		vy: -2,
 		maxAge: 1,
-		spread: Math.PI / 14,
+		spread: Math.PI / 8,
 		color: "#000000",
 		dimensions: unit.cm(7),
 	};
-	function emitDirt() {
+	function emitDirt(dig) {
 		dirtEmitter.x = self.x + self.w / 2;
 		dirtEmitter.y = self.y + self.h;
-		dirtEmitter.vx = self.vx;
+		dirtEmitter.vx = dig ? 0 : self.vx;
 		createParticles(dirtEmitter);
-		screenShake(Math.abs(self.vx) * 2)
+		screenShake(Math.abs(dig ? 3 : self.vx) * 2)
 	}
 
 	self.draw = function(ctx) {
 		outlineSkewed(self, ctx, unit.cm(5), unit.cm(3));
-		ctx.fillStyle = "black";
+		ctx.fillStyle = "#55cc55";
 		ctx.strokeStyle = "grey";
 		ctx.fill();
 		ctx.stroke();
@@ -149,7 +151,7 @@ function Player(x, y) {
 			jumpTime -= dt;
 		}
 
-		// Move left, right, up
+		// Move left, right, up, down
 		if (keys.left) {
 			var newrvx = self.rvx - currSpd * dt;
 			if (self.currentGround || newrvx > -spdAirLimit) {
@@ -171,6 +173,14 @@ function Player(x, y) {
 			jumping = true;
 			jumpTime = jumpTimeMax;
 		}
+		if (keys.down) {
+			self.ignorePlatforms = true;
+			if (self.currentGround && self.currentGround.name === "platform")
+				emitDirt(true);
+		} else {
+			self.ignorePlatforms = false;
+		}
+
 
 		// Shake screen on landing
 		if (self.currentGround && !prevGround) {
@@ -191,19 +201,28 @@ function EnemyFollower(x, y) {
 		currentGround: null };
 
 	var spd = 20;
-	var jmp = 5;
+	var jmp = 5.2;
 	var invincible = false;
 	var invincnt = 0;
 	var health = 3;
 
-	var future = {};
+	var future = {
+		x: self.x, y: self.y,
+		w: self.w, h: self.h,
+		currentGround: self.currentGround,
+	};
 
 	var canJump = true;
-	function jump(jmp) {
-		if (canJump) {
+	var jmpTimeout = null;
+	function jump(jmp, force) {
+		if (!self.currentGround)
+			return;
+
+		if (canJump || force) {
 			self.rvy -= jmp;
 			canJump = false;
-			setTimeout(() => canJump = true, randint(1500, 3000));
+			clearTimeout(jmpTimeout);
+			jmpTimeout = setTimeout(() => canJump = true, randint(1500, 3000));
 		}
 	}
 
@@ -235,13 +254,15 @@ function EnemyFollower(x, y) {
 				} else {
 					self.h /= 1.8;
 					invincible = true;
-					entBounceUp(player, self);
+					entBounceUp(player, self, dt);
 					setTimeout(() => invincible = false, 300);
 				}
 			} else {
-				stop();
-				alert("Loss!");
-				setTimeout(init, 0);
+				setTimeout(() => {
+					stop();
+					alert("Loss!");
+					setTimeout(init, 0);
+				}, 0);
 			}
 		}
 	}
@@ -257,12 +278,15 @@ function EnemyFollower(x, y) {
 				jump(jmp);
 
 			// Will we be on ground next tick?
-			entDupe(self, future);
-			future.x += future.vx * dt * 1;
-			future.y += future.vy * dt * 1;
+			future.currentGround = self.currentGround;
+			future.x = self.x + self.vx * dt;
+			future.y = self.y + self.vy * dt;
 			entGroundCollissions(future, dt);
-			if (!future.currentGround)
-				jump(jmp);
+			if (!future.currentGround) {
+				console.log("I will not be on ground next frame.");
+				console.log(self.vy);
+				jump(jmp, true);
+			}
 		}
 	}
 
