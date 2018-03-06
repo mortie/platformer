@@ -11,7 +11,7 @@ var entTypes = {
 			frames: [ "number", "null" ],
 			path: [ Array, "null" ],
 		},
-		defaults: { x: 100, y: 100, w: 100, h: 20 },
+		defaults: { x: 1, y: 1, w: 1, h: 0.25 },
 	},
 
 	wall: {
@@ -20,7 +20,7 @@ var entTypes = {
 			x: "number", y: "number",
 			w: "number", h: "number",
 		},
-		defaults: { x: 100, y: 100, w: 100, h: 20 },
+		defaults: { x: 1, y: 1, w: 1, h: 0.25 },
 	},
 
 	victory: {
@@ -32,7 +32,7 @@ var entTypes = {
 			path: [ Array, "null" ],
 			physics: [ "boolean", "null" ],
 		},
-		defaults: { x: 100, y: 100 },
+		defaults: { x: 1, y: 1 },
 	},
 
 	player: {
@@ -40,7 +40,7 @@ var entTypes = {
 		props: {
 			x: "number", y: "number",
 		},
-		defaults: { x: 100, y: 100 },
+		defaults: { x: 1, y: 1 },
 	},
 };
 
